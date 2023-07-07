@@ -44,6 +44,7 @@ window.addEventListener("mousemove", (event) => {
 
 const images = {
   demo: new Image(),
+  guard: new Image(),
 };
 
 function loadImages() {
@@ -86,14 +87,27 @@ class Map {
   setVisible(x, y, visible) {
     this.visibility[y * this.width + x] = visible;
   }
+
+  resetVisibility() {
+    for (let i = 0; i < this.visibility.length; i++) {
+      this.visibility[i] = false;
+    }
+  }
+}
+
+class Guard {
+  constructor(x, y, direction) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
+  }
+
+  update(map) {
+    computeVisibility(map, this.x, this.y, this.direction, 100, 10);
+  }
 }
 
 function computeVisibility(map, x, y, direction, fov, radius) {
-  // Reset visibility
-  for (let i = 0; i < map.visibility.length; i++) {
-    map.visibility[i] = false;
-  }
-
   function castRay(x, y, dx, dy, radius) {
     let sx = x;
     let sy = y;
@@ -124,10 +138,10 @@ function computeVisibility(map, x, y, direction, fov, radius) {
   }
 }
 
-let direction = 0;
 function play() {
   loadImages();
 
+  // Create map
   const map = new Map(mapWidth, mapHeight);
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
@@ -137,23 +151,26 @@ function play() {
     }
   }
 
-  const visibility = new Array(mapWidth * mapHeight);
-  for (let i = 0; i < visibility.length; i++) {
-    visibility[i] = false;
+  // Create guards
+  const guards = [];
+  for (let i = 0; i < 10; i++) {
+    guards.push(
+      new Guard(
+        Math.floor(Math.random() * mapWidth),
+        Math.floor(Math.random() * mapHeight),
+        Math.floor(Math.random() * 4) * 90
+      )
+    );
   }
 
   function draw(time) {
-    direction += 1;
-    // Compute visibility
-    computeVisibility(
-      map,
-      mouse.x / tileSize,
-      mouse.y / tileSize,
-      direction,
-      100,
-      10
-    );
+    // Update guards and compute visibility
+    map.resetVisibility();
+    for (const guard of guards) {
+      guard.update(map);
+    }
 
+    // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw map
@@ -175,6 +192,17 @@ function play() {
           context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
         }
       }
+    }
+
+    // Draw guards
+    for (const guard of guards) {
+      context.drawImage(
+        images.guard,
+        guard.x * tileSize,
+        guard.y * tileSize,
+        tileSize,
+        tileSize
+      );
     }
 
     requestAnimationFrame(draw);
