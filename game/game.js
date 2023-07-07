@@ -88,7 +88,7 @@ class Map {
   }
 }
 
-function computeVisibility(map, x, y, radius) {
+function computeVisibility(map, x, y, direction, fov, radius) {
   // Reset visibility
   for (let i = 0; i < map.visibility.length; i++) {
     map.visibility[i] = false;
@@ -116,7 +116,7 @@ function computeVisibility(map, x, y, radius) {
   }
 
   // Cast rays
-  for (let i = 0; i < 360; i += 2) {
+  for (let i = direction - fov / 2; i < direction + fov / 2; i += 2) {
     const angle = (i * Math.PI) / 180;
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
@@ -124,6 +124,7 @@ function computeVisibility(map, x, y, radius) {
   }
 }
 
+let direction = 0;
 function play() {
   loadImages();
 
@@ -142,8 +143,16 @@ function play() {
   }
 
   function draw(time) {
+    direction += 1;
     // Compute visibility
-    computeVisibility(map, mouse.x / tileSize, mouse.y / tileSize, 10);
+    computeVisibility(
+      map,
+      mouse.x / tileSize,
+      mouse.y / tileSize,
+      direction,
+      100,
+      10
+    );
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
