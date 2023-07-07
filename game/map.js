@@ -64,46 +64,35 @@ class Map {
       // remove the current node from openSet
       openSet.splice(lowestIndex, 1);
 
-      // add the current node to closedSet
-      closedSet.push([x, y]);
+      // iterate over the neighbors of the current node
+      for (let [nx, ny] of [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ]) {
+        // skip neighbors that are outside the map
+        if (nx < 0 || nx >= this.width || ny < 0 || ny >= this.height) {
+          continue;
+        }
 
-      // for each neighbor of the current node
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          const neighborX = x + dx;
-          const neighborY = y + dy;
+        // skip neighbors that are walls
+        if (this.tiles.get(nx, ny).solid) {
+          continue;
+        }
 
-          // if the neighbor is not traversable or is in closedSet, ignore it
-          if (
-            neighborX < 0 ||
-            neighborX >= this.width ||
-            neighborY < 0 ||
-            neighborY >= this.height ||
-            this.tiles.get(neighborX, neighborY).solid ||
-            closedSet.includes([neighborX, neighborY])
-          ) {
-            continue;
-          }
+        // compute the cost of getting from the start node to this neighbor
+        const tentativeGScore = gScore.get(x, y) + 1;
 
-          // the distance from start to a neighbor
-          const tentativeGScore = gScore.get(x, y) + 1;
+        // record this path if it is better than the previous one
+        if (tentativeGScore < gScore.get(nx, ny)) {
+          // this path is the best until now, record it!
+          cameFrom.set(nx, ny, [x, y]);
+          gScore.set(nx, ny, tentativeGScore);
+          fScore.set(nx, ny, tentativeGScore + heuristic(nx, ny, x1, y1));
 
-          // if the neighbor is not in openSet, add it
-          if (!openSet.includes([neighborX, neighborY])) {
-            openSet.push([neighborX, neighborY]);
-          } else if (tentativeGScore >= gScore.get(neighborX, neighborY)) {
-            // this is not a better path
-            continue;
-          }
-
-          // this path is the best until now, record it
-          cameFrom.set(neighborX, neighborY, [x, y]);
-          gScore.set(neighborX, neighborY, tentativeGScore);
-          fScore.set(
-            neighborX,
-            neighborY,
-            tentativeGScore + heuristic(neighborX, neighborY, x1, y1)
-          );
+          // add this neighbor to openSet
+          openSet.push([nx, ny]);
         }
       }
     }

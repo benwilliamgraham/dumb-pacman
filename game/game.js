@@ -91,7 +91,9 @@ function play() {
     );
   }
 
-  function draw(time) {
+  const path = map.getPath(0, 0, 39, 29);
+
+  function gameLoop(time) {
     // Update guards and compute visibility
     map.visibility.fill(false);
     for (const guard of guards) {
@@ -133,9 +135,27 @@ function play() {
       );
     }
 
-    requestAnimationFrame(draw);
+    // Draw path
+    if (path !== null) {
+      context.strokeStyle = "red";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(
+        path[0][0] * tileSize + tileSize / 2,
+        path[0][1] * tileSize + tileSize / 2
+      );
+      for (let i = 1; i < path.length; i++) {
+        context.lineTo(
+          path[i][0] * tileSize + tileSize / 2,
+          path[i][1] * tileSize + tileSize / 2
+        );
+      }
+      context.stroke();
+    }
+
+    requestAnimationFrame(gameLoop);
   }
-  requestAnimationFrame(draw);
+  requestAnimationFrame(gameLoop);
 }
 
 play();
