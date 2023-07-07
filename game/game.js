@@ -60,38 +60,69 @@ class Tile {
   }
 }
 
+class Grid {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.data = new Array(width * height);
+  }
+
+  get(x, y) {
+    return this.data[y * this.width + x];
+  }
+
+  set(x, y, value) {
+    this.data[y * this.width + x] = value;
+  }
+}
+
 class Map {
   constructor(width, height) {
     this.width = width;
     this.height = height;
-    this.tiles = new Array(width * height);
-    this.visibility = new Array(width * height);
-    for (let i = 0; i < this.tiles.length; i++) {
-      this.tiles[i] = new Tile(false);
-      this.visibility[i] = false;
-    }
-  }
-
-  getTile(x, y) {
-    return this.tiles[y * this.width + x];
-  }
-
-  setTile(x, y, tile) {
-    this.tiles[y * this.width + x] = tile;
-  }
-
-  isVisible(x, y) {
-    return this.visibility[y * this.width + x];
-  }
-
-  setVisible(x, y, visible) {
-    this.visibility[y * this.width + x] = visible;
+    this.tiles = new Grid(width, height);
+    this.visibility = new Grid(width, height);
   }
 
   resetVisibility() {
-    for (let i = 0; i < this.visibility.length; i++) {
-      this.visibility[i] = false;
+    for (let y = 0; y < this.visibility.height; y++) {
+      for (let x = 0; x < this.visibility.width; x++) {
+        this.visibility.set(x, y, false);
+      }
     }
+  }
+
+  getPath(x0, y0, x1, y1) {
+    // compute the shortest path between two points
+    // using the A* algorithm
+
+    const openSet = [[x0, y0]];
+
+    class CameFromMap {
+      constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.cameFrom = new Array(width * height);
+        for (let i = 0; i < this.cameFrom.length; i++) {
+          this.cameFrom[i] = null;
+        }
+      }
+
+      get(x, y) {
+        return this.cameFrom[y * this.width + x];
+      }
+
+      set(x, y, value) {
+        this.cameFrom[y * this.width + x] = value;
+      }
+    }
+    const cameFrom = new CameFromMap(this.width, this.height);
+
+    const gScore = new Array(this.width * this.height);
+    for (let i = 0; i < gScore.length; i++) {
+      gScore[i] = Infinity;
+    }
+    gScore[y0 * this.width + x0] = 0;
   }
 }
 
@@ -119,11 +150,11 @@ function computeVisibility(map, x, y, direction, fov, radius) {
         tx >= map.width ||
         ty < 0 ||
         ty >= map.height ||
-        map.getTile(tx, ty).solid
+        map.tiles.get(tx, ty).solid
       ) {
         return;
       }
-      map.setVisible(tx, ty, true);
+      map.visibility.set(tx, ty, true);
       sx += dx;
       sy += dy;
     }
@@ -146,7 +177,9 @@ function play() {
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
       if (Math.random() < 0.1) {
-        map.setTile(x, y, new Tile(true, "demo"));
+        map.tiles.set(x, y, new Tile(true, "demo"));
+      } else {
+        map.tiles.set(x, y, new Tile(false, null));
       }
     }
   }
@@ -177,7 +210,7 @@ function play() {
     context.fillStyle = "rgba(0, 0, 0, 0.5)";
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
-        const tile = map.getTile(x, y);
+        const tile = map.tiles.get(x, y);
         if (tile.texture) {
           context.drawImage(
             images[tile.texture],
@@ -188,7 +221,7 @@ function play() {
           );
         }
         // Cover with gray if not visible
-        if (!map.isVisible(x, y)) {
+        if (!map.visibility.get(x, y)) {
           context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
         }
       }
