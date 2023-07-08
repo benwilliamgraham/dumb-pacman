@@ -1,2 +1,10 @@
 "use strict";
-//I wrote something!!!
+
+class Pacman {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+export default Pacman;

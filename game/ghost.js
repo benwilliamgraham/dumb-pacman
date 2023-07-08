@@ -29,6 +29,18 @@ class Ghost {
         this.nextPathX,
         this.nextPathY
       );
+
+      // Remove first element of path if it is the current position
+      if (
+        this.path != null &&
+        this.path.length > 0 &&
+        this.path[0][0] === this.prevX &&
+        this.path[0][1] === this.prevY
+      ) {
+        this.path = this.path.slice(1);
+      }
+
+      // Set target to first element of path
       if (this.path != null && this.path.length > 0) {
         this.targetX = this.path[0][0];
         this.targetY = this.path[0][1];

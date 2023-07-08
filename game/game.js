@@ -2,6 +2,7 @@
 
 import Map from "./map.js";
 import Ghost from "./ghost.js";
+import Pacman from "./pacman.js";
 
 // Setup document
 document.body.style.margin = "0";
@@ -137,8 +138,11 @@ function play() {
   // Add ghosts
   const ghosts = [];
   for (let i = 0; i < 4; i++) {
-    ghosts.push(new Ghost(13 + i * 2, 11));
+    ghosts.push(new Ghost(15 + i * 2, 11));
   }
+
+  // Add pacman
+  const pacman = new Pacman(7, 7);
 
   let lastTime = 0;
   function gameLoop(time) {
@@ -167,12 +171,25 @@ function play() {
       );
     }
 
+    // Draw pacman
+    context.fillStyle = "rgba(255, 255, 0, 0.5)";
+    context.fillRect(
+      pacman.x * tileSize,
+      pacman.y * tileSize,
+      tileSize,
+      tileSize
+    );
+
     // Draw path
     if (ghostPath !== null) {
       context.strokeStyle = "rgba(255, 0, 0, 0.5)";
       context.lineWidth = tileSize / 4;
       context.beginPath();
       context.moveTo(
+        ghostSelected.x * tileSize + tileSize / 2,
+        ghostSelected.y * tileSize + tileSize / 2
+      );
+      context.lineTo(
         ghostPath[0][0] * tileSize + tileSize / 2,
         ghostPath[0][1] * tileSize + tileSize / 2
       );
