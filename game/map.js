@@ -13,6 +13,34 @@ class Map {
     // compute the shortest path between two points
     // using the A* algorithm
 
+    // First, if the end point is solid, find the nearest non-solid point
+    if (this.tiles.get(x1, y1).solid) {
+      const queue = [[x1, y1]];
+      const visited = new Array2D(this.width, this.height);
+      visited.set(x1, y1, true);
+      while (queue.length > 0) {
+        const [x, y] = queue.shift();
+        if (!this.tiles.get(x, y).solid) {
+          x1 = x;
+          y1 = y;
+          break;
+        }
+        for (const [dx, dy] of [
+          [-1, 0],
+          [1, 0],
+          [0, -1],
+          [0, 1],
+        ]) {
+          const x2 = (x + dx + this.width) % this.width;
+          const y2 = (y + dy + this.height) % this.height;
+          if (!visited.get(x2, y2)) {
+            queue.push([x2, y2]);
+            visited.set(x2, y2, true);
+          }
+        }
+      }
+    }
+
     // heuristic function
     const width = this.width;
     const height = this.height;
