@@ -100,12 +100,8 @@ function play() {
     // Update ghost path
     if (ghostSelected !== null) {
       ghostSelected.setPath(
-        map.getPath(
-          ghostSelected.prevX,
-          ghostSelected.prevY,
-          Math.floor(mouse.x / tileSize),
-          Math.floor(mouse.y / tileSize)
-        )
+        Math.floor(mouse.x / tileSize),
+        Math.floor(mouse.y / tileSize)
       );
       ghostSelected = null;
       ghostPath = null;

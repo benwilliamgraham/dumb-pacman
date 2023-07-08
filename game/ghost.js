@@ -10,17 +10,15 @@ class Ghost {
     this.targetY = y;
     this.x = x;
     this.y = y;
+    this.nextPathX = null;
+    this.nextPathY = null;
     this.path = null;
     this.pathProgress = 0;
   }
 
-  setPath(path) {
-    // if it's already on a path, keep the next tile
-    if (this.path !== null && path !== null) {
-      this.path = [this.path[0]].concat(path);
-    } else {
-      this.path = path;
-    }
+  setPath(x, y) {
+    this.nextPathX = x;
+    this.nextPathY = y;
   }
 
   update(map, dt) {
@@ -31,16 +29,52 @@ class Ghost {
         this.prevY = this.targetY;
 
         this.pathProgress -= 1;
-        this.path = this.path.slice(1);
-        if (this.path.length === 0) {
-          this.path = null;
-          this.pathProgress = 0;
+
+        if (this.nextPathX !== null && this.nextPathY !== null) {
+          this.path = map.getPath(
+            this.prevX,
+            this.prevY,
+            this.nextPathX,
+            this.nextPathY
+          );
+          if (this.path != null && this.path.length > 0) {
+            this.targetX = this.path[0][0];
+            this.targetY = this.path[0][1];
+          } else {
+            this.path = null;
+            this.pathProgress = 0;
+          }
+          this.nextPathX = null;
+          this.nextPathY = null;
         } else {
-          this.targetX = this.path[0][0];
-          this.targetY = this.path[0][1];
+          this.path = this.path.slice(1);
+          if (this.path.length === 0) {
+            this.path = null;
+            this.pathProgress = 0;
+          } else {
+            this.targetX = this.path[0][0];
+            this.targetY = this.path[0][1];
+          }
         }
       }
+    } else if (this.nextPathX !== null && this.nextPathY !== null) {
+      this.path = map.getPath(
+        this.prevX,
+        this.prevY,
+        this.nextPathX,
+        this.nextPathY
+      );
+      if (this.path != null && this.path.length > 0) {
+        this.targetX = this.path[0][0];
+        this.targetY = this.path[0][1];
+      } else {
+        this.path = null;
+        this.pathProgress = 0;
+      }
+      this.nextPathX = null;
+      this.nextPathY = null;
     }
+
     let xDir = this.targetX - this.prevX;
     if (Math.abs(xDir) > 1) {
       xDir = -Math.sign(xDir);
@@ -49,7 +83,6 @@ class Ghost {
     if (Math.abs(yDir) > 1) {
       yDir = -Math.sign(yDir);
     }
-
     this.x = this.prevX + xDir * this.pathProgress;
     this.y = this.prevY + yDir * this.pathProgress;
   }
