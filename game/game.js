@@ -150,13 +150,13 @@ function play() {
 
   // Add ghosts
   const ghosts = [];
-  for (let [x, y, spritesheet] of [
-    [15, 11, images.pink],
-    [17, 11, images.red],
-    [19, 11, images.blue],
-    [21, 11, images.orange],
+  for (let [x, y, spritesheet, color] of [
+    [15, 11, images.pink, "#E4639F88"],
+    [17, 11, images.red, "#CA090988"],
+    [19, 11, images.blue, "#00FFF988"],
+    [21, 11, images.orange, "#FF810088"],
   ]) {
-    ghosts.push(new Ghost(x, y, spritesheet));
+    ghosts.push(new Ghost(x, y, spritesheet, color));
   }
 
   // Add pacman
@@ -241,7 +241,7 @@ function play() {
 
     // Draw path
     if (ghostPath !== null) {
-      context.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      context.strokeStyle = ghostSelected.color;
       context.lineWidth = tileSize / 4;
       context.beginPath();
       context.moveTo(
