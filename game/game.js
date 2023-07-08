@@ -216,7 +216,20 @@ function play() {
       );
     }
 
-    // Draw pacman
+    // Draw pacman reversed if moving left
+    if (pacman.direction === "left") {
+      context.save();
+      context.translate(
+        pacman.x * tileSize + tileSize / 2,
+        pacman.y * tileSize + tileSize / 2
+      );
+      context.scale(-1, 1);
+      context.translate(
+        -(pacman.x * tileSize + tileSize / 2),
+        -(pacman.y * tileSize + tileSize / 2)
+      );
+    }
+
     context.drawImage(
       pacman.spritesheet,
       (pacman.spritesheet.width / pacman.numFrames) * pacman.frame,
@@ -228,6 +241,10 @@ function play() {
       tileSize,
       tileSize
     );
+
+    if (pacman.direction === "left") {
+      context.restore();
+    }
 
     // Draw path
     if (ghostSelected !== null) {
