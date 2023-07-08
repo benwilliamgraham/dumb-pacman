@@ -25,14 +25,24 @@ class Ghost {
         this.path = this.path.slice(1);
         if (this.path.length === 0) {
           this.path = null;
+          this.pathProgress = 0;
         } else {
           this.targetX = this.path[0][0];
           this.targetY = this.path[0][1];
         }
       }
     }
-    this.x = this.prevX + (this.targetX - this.prevX) * this.pathProgress;
-    this.y = this.prevY + (this.targetY - this.prevY) * this.pathProgress;
+    let xDir = this.targetX - this.prevX;
+    if (Math.abs(xDir) > 1) {
+      xDir = -Math.sign(xDir);
+    }
+    let yDir = this.targetY - this.prevY;
+    if (Math.abs(yDir) > 1) {
+      yDir = -Math.sign(yDir);
+    }
+
+    this.x = this.prevX + xDir * this.pathProgress;
+    this.y = this.prevY + yDir * this.pathProgress;
   }
 }
 
