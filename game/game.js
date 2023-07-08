@@ -35,16 +35,6 @@ resize();
 
 const context = canvas.getContext("2d");
 
-// Add mouse position tracking
-const mouse = {
-  x: 0,
-  y: 0,
-};
-window.addEventListener("mousemove", (event) => {
-  mouse.x = event.clientX;
-  mouse.y = event.clientY;
-});
-
 const images = {
   demo: new Image(),
 };
@@ -63,7 +53,63 @@ class Tile {
 }
 
 function play() {
+  // Load images
   loadImages();
+
+  // Setup controls
+  const mouse = {
+    x: 0,
+    y: 0,
+  };
+  let ghostSelected = null;
+  let ghostPath = null;
+  window.addEventListener("mousemove", (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+
+    // Update ghost path
+    if (ghostSelected !== null) {
+      ghostPath = map.getPath(
+        ghostSelected.prevX,
+        ghostSelected.prevY,
+        Math.floor(mouse.x / tileSize),
+        Math.floor(mouse.y / tileSize)
+      );
+    } else {
+      ghostPath = null;
+    }
+  });
+  window.addEventListener("mousedown", (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+
+    // Check if mouse is over ghost
+    for (const ghost of ghosts) {
+      if (
+        mouse.x >= ghost.x * tileSize &&
+        mouse.x < (ghost.x + 1) * tileSize &&
+        mouse.y >= ghost.y * tileSize &&
+        mouse.y < (ghost.y + 1) * tileSize
+      ) {
+        ghostSelected = ghost;
+      }
+    }
+  });
+  window.addEventListener("mouseup", (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+
+    // Update ghost path
+    if (ghostSelected !== null) {
+      ghostSelected.path = map.getPath(
+        ghostSelected.prevX,
+        ghostSelected.prevY,
+        Math.floor(mouse.x / tileSize),
+        Math.floor(mouse.y / tileSize)
+      );
+      ghostSelected = null;
+    }
+  });
 
   // Create map
   const map = new Map(mapWidth, mapHeight);
@@ -83,19 +129,10 @@ function play() {
     ghosts.push(new Ghost(10 + i * 2, 10));
   }
 
-  ghosts[0].path = map.getPath(ghosts[0].prevX, ghosts[0].prevY, 29, 23);
-
   let lastTime = 0;
   function gameLoop(time) {
     const dt = (time - lastTime) % 1000; // Prevents delta time from getting too large
     lastTime = time;
-
-    const path = map.getPath(
-      0,
-      0,
-      Math.floor(mouse.x / tileSize),
-      Math.floor(mouse.y / tileSize)
-    );
 
     // Update ghosts
     for (const ghost of ghosts) {
@@ -134,29 +171,29 @@ function play() {
     }
 
     // Draw path
-    if (path !== null) {
+    if (ghostPath !== null) {
       context.strokeStyle = "rgba(0, 0, 0, 0.5)";
       context.lineWidth = 2;
       context.beginPath();
       context.moveTo(
-        path[0][0] * tileSize + tileSize / 2,
-        path[0][1] * tileSize + tileSize / 2
+        ghostPath[0][0] * tileSize + tileSize / 2,
+        ghostPath[0][1] * tileSize + tileSize / 2
       );
-      for (let i = 1; i < path.length; i++) {
-        // Determine if the path has wrapped around the map
-        const xDiff = Math.abs(path[i][0] - path[i - 1][0]);
-        const yDiff = Math.abs(path[i][1] - path[i - 1][1]);
+      for (let i = 1; i < ghostPath.length; i++) {
+        // Determine if the ghostPath has wrapped around the map
+        const xDiff = Math.abs(ghostPath[i][0] - ghostPath[i - 1][0]);
+        const yDiff = Math.abs(ghostPath[i][1] - ghostPath[i - 1][1]);
         if (xDiff > 1 || yDiff > 1) {
           context.stroke();
           context.beginPath();
           context.moveTo(
-            path[i][0] * tileSize + tileSize / 2,
-            path[i][1] * tileSize + tileSize / 2
+            ghostPath[i][0] * tileSize + tileSize / 2,
+            ghostPath[i][1] * tileSize + tileSize / 2
           );
         }
         context.lineTo(
-          path[i][0] * tileSize + tileSize / 2,
-          path[i][1] * tileSize + tileSize / 2
+          ghostPath[i][0] * tileSize + tileSize / 2,
+          ghostPath[i][1] * tileSize + tileSize / 2
         );
       }
       context.stroke();
