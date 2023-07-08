@@ -37,6 +37,10 @@ const context = canvas.getContext("2d");
 
 const images = {
   demo: new Image(),
+  background: new Image(),
+};
+images.background.onload = () => {
+  play();
 };
 
 function loadImages() {
@@ -46,16 +50,12 @@ function loadImages() {
 }
 
 class Tile {
-  constructor(solid, texture) {
+  constructor(solid) {
     this.solid = solid;
-    this.texture = texture;
   }
 }
 
 function play() {
-  // Load images
-  loadImages();
-
   // Setup controls
   const mouse = {
     x: 0,
@@ -110,14 +110,29 @@ function play() {
     }
   });
 
+  // Sample background image
+  const backgroundCanvas = document.createElement("canvas");
+  backgroundCanvas.width = images.background.width;
+  backgroundCanvas.height = images.background.height;
+  const backgroundContext = backgroundCanvas.getContext("2d");
+  backgroundContext.drawImage(images.background, 0, 0);
+
   // Create map
   const map = new Map(mapWidth, mapHeight);
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
-      if (Math.random() < 0.1) {
-        map.tiles.set(x, y, new Tile(true, "demo"));
+      // Sample background image
+      const imgX = Math.floor(((x + 0.5) / mapWidth) * images.background.width);
+      const imgY = Math.floor(
+        ((y + 0.5) / mapHeight) * images.background.height
+      );
+      const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
+
+      if (pixel[1] == 0) {
+        console.log(pixel);
+        map.tiles.set(x, y, new Tile(false));
       } else {
-        map.tiles.set(x, y, new Tile(false, null));
+        map.tiles.set(x, y, new Tile(true));
       }
     }
   }
@@ -125,7 +140,7 @@ function play() {
   // Add ghosts
   const ghosts = [];
   for (let i = 0; i < 4; i++) {
-    ghosts.push(new Ghost(10 + i * 2, 10));
+    ghosts.push(new Ghost(13 + i * 2, 11));
   }
 
   let lastTime = 0;
@@ -141,22 +156,8 @@ function play() {
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw map
-    context.fillStyle = "rgba(0, 0, 0, 0.5)";
-    for (let y = 0; y < mapHeight; y++) {
-      for (let x = 0; x < mapWidth; x++) {
-        const tile = map.tiles.get(x, y);
-        if (tile.texture) {
-          context.drawImage(
-            images[tile.texture],
-            x * tileSize,
-            y * tileSize,
-            tileSize,
-            tileSize
-          );
-        }
-      }
-    }
+    // Draw background
+    context.drawImage(images.background, 0, 0, canvas.width, canvas.height);
 
     // Draw ghosts
     for (const ghost of ghosts) {
@@ -171,8 +172,8 @@ function play() {
 
     // Draw path
     if (ghostPath !== null) {
-      context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-      context.lineWidth = 2;
+      context.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      context.lineWidth = tileSize / 4;
       context.beginPath();
       context.moveTo(
         ghostPath[0][0] * tileSize + tileSize / 2,
@@ -203,4 +204,4 @@ function play() {
   requestAnimationFrame(gameLoop);
 }
 
-play();
+loadImages();
