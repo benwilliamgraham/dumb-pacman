@@ -91,9 +91,14 @@ function play() {
     );
   }
 
-  const path = map.getPath(0, 0, 39, 29);
-
   function gameLoop(time) {
+    const path = map.getPath(
+      0,
+      0,
+      Math.floor(mouse.x / tileSize),
+      Math.floor(mouse.y / tileSize)
+    );
+
     // Update guards and compute visibility
     map.visibility.fill(false);
     for (const guard of guards) {
