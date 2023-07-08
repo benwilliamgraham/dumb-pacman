@@ -12,8 +12,8 @@ const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
 
 // Setup canvas
-const mapWidth = 40;
-const mapHeight = 25;
+const mapWidth = 37;
+const mapHeight = 23;
 let tileSize = 1;
 
 function resize() {
@@ -75,8 +75,6 @@ function play() {
         Math.floor(mouse.x / tileSize),
         Math.floor(mouse.y / tileSize)
       );
-    } else {
-      ghostPath = null;
     }
   });
   window.addEventListener("mousedown", (event) => {
@@ -108,6 +106,7 @@ function play() {
         Math.floor(mouse.y / tileSize)
       );
       ghostSelected = null;
+      ghostPath = null;
     }
   });
 
