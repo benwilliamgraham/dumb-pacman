@@ -9,7 +9,7 @@ class Pacman extends Entity {
     this.targetGhost = null;
 
     this.framesPerSecond = 10;
-    this.numFrames = 7;
+    this.numFrames = 10;
   }
 
   update(map, dt, ghosts) {

@@ -229,10 +229,10 @@ function play() {
     // Draw pacman
     context.drawImage(
       pacman.spritesheet,
-      0,
+      (pacman.spritesheet.width / pacman.numFrames) * pacman.frame,
       0,
       pacman.spritesheet.width / pacman.numFrames,
-      pacman.spritesheet.height / pacman.numFrames,
+      pacman.spritesheet.height,
       pacman.x * tileSize,
       pacman.y * tileSize,
       tileSize,
