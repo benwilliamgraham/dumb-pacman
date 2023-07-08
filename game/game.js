@@ -1,5 +1,8 @@
 "use strict";
 
+import Map from "./map.js";
+import Ghost from "./ghost.js";
+
 // Setup document
 document.body.style.margin = "0";
 document.body.style.padding = "0";
@@ -10,7 +13,7 @@ document.body.appendChild(canvas);
 
 // Setup canvas
 const mapWidth = 40;
-const mapHeight = 30;
+const mapHeight = 25;
 let tileSize = 1;
 
 function resize() {
@@ -44,7 +47,6 @@ window.addEventListener("mousemove", (event) => {
 
 const images = {
   demo: new Image(),
-  guard: new Image(),
 };
 
 function loadImages() {
@@ -60,84 +62,6 @@ class Tile {
   }
 }
 
-class Map {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-    this.tiles = new Array(width * height);
-    this.visibility = new Array(width * height);
-    for (let i = 0; i < this.tiles.length; i++) {
-      this.tiles[i] = new Tile(false);
-      this.visibility[i] = false;
-    }
-  }
-
-  getTile(x, y) {
-    return this.tiles[y * this.width + x];
-  }
-
-  setTile(x, y, tile) {
-    this.tiles[y * this.width + x] = tile;
-  }
-
-  isVisible(x, y) {
-    return this.visibility[y * this.width + x];
-  }
-
-  setVisible(x, y, visible) {
-    this.visibility[y * this.width + x] = visible;
-  }
-
-  resetVisibility() {
-    for (let i = 0; i < this.visibility.length; i++) {
-      this.visibility[i] = false;
-    }
-  }
-}
-
-class Guard {
-  constructor(x, y, direction) {
-    this.x = x;
-    this.y = y;
-    this.direction = direction;
-  }
-
-  update(map) {
-    computeVisibility(map, this.x, this.y, this.direction, 100, 10);
-  }
-}
-
-function computeVisibility(map, x, y, direction, fov, radius) {
-  function castRay(x, y, dx, dy, radius) {
-    let sx = x;
-    let sy = y;
-    for (let i = 0; i < radius; i++) {
-      const tx = Math.floor(sx);
-      const ty = Math.floor(sy);
-      if (
-        tx < 0 ||
-        tx >= map.width ||
-        ty < 0 ||
-        ty >= map.height ||
-        map.getTile(tx, ty).solid
-      ) {
-        return;
-      }
-      map.setVisible(tx, ty, true);
-      sx += dx;
-      sy += dy;
-    }
-  }
-
-  // Cast rays
-  for (let i = direction - fov / 2; i < direction + fov / 2; i += 2) {
-    const angle = (i * Math.PI) / 180;
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    castRay(x, y, dx, dy, radius);
-  }
-}
-
 function play() {
   loadImages();
 
@@ -146,28 +70,29 @@ function play() {
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
       if (Math.random() < 0.1) {
-        map.setTile(x, y, new Tile(true, "demo"));
+        map.tiles.set(x, y, new Tile(true, "demo"));
+      } else {
+        map.tiles.set(x, y, new Tile(false, null));
       }
     }
   }
 
-  // Create guards
-  const guards = [];
-  for (let i = 0; i < 10; i++) {
-    guards.push(
-      new Guard(
-        Math.floor(Math.random() * mapWidth),
-        Math.floor(Math.random() * mapHeight),
-        Math.floor(Math.random() * 4) * 90
-      )
-    );
+  // Add ghosts
+  const ghosts = [];
+  for (let i = 0; i < 4; i++) {
+    ghosts.push(new Ghost(10 + i * 2, 10));
   }
 
-  function draw(time) {
-    // Update guards and compute visibility
-    map.resetVisibility();
-    for (const guard of guards) {
-      guard.update(map);
+  function gameLoop(time) {
+    const path = map.getPath(
+      0,
+      0,
+      Math.floor(mouse.x / tileSize),
+      Math.floor(mouse.y / tileSize)
+    );
+
+    // Update ghosts
+    for (const ghost of ghosts) {
     }
 
     // Clear canvas
@@ -177,7 +102,7 @@ function play() {
     context.fillStyle = "rgba(0, 0, 0, 0.5)";
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
-        const tile = map.getTile(x, y);
+        const tile = map.tiles.get(x, y);
         if (tile.texture) {
           context.drawImage(
             images[tile.texture],
@@ -187,27 +112,52 @@ function play() {
             tileSize
           );
         }
-        // Cover with gray if not visible
-        if (!map.isVisible(x, y)) {
-          context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-        }
       }
     }
 
-    // Draw guards
-    for (const guard of guards) {
-      context.drawImage(
-        images.guard,
-        guard.x * tileSize,
-        guard.y * tileSize,
+    // Draw ghosts
+    for (const ghost of ghosts) {
+      context.fillStyle = "rgba(255, 0, 0, 0.5)";
+      context.fillRect(
+        ghost.x * tileSize,
+        ghost.y * tileSize,
         tileSize,
         tileSize
       );
     }
 
-    requestAnimationFrame(draw);
+    // Draw path
+    if (path !== null) {
+      context.strokeStyle = "rgba(0, 0, 0, 0.5)";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(
+        path[0][0] * tileSize + tileSize / 2,
+        path[0][1] * tileSize + tileSize / 2
+      );
+      for (let i = 1; i < path.length; i++) {
+        // Determine if the path has wrapped around the map
+        const xDiff = Math.abs(path[i][0] - path[i - 1][0]);
+        const yDiff = Math.abs(path[i][1] - path[i - 1][1]);
+        if (xDiff > 1 || yDiff > 1) {
+          context.stroke();
+          context.beginPath();
+          context.moveTo(
+            path[i][0] * tileSize + tileSize / 2,
+            path[i][1] * tileSize + tileSize / 2
+          );
+        }
+        context.lineTo(
+          path[i][0] * tileSize + tileSize / 2,
+          path[i][1] * tileSize + tileSize / 2
+        );
+      }
+      context.stroke();
+    }
+
+    requestAnimationFrame(gameLoop);
   }
-  requestAnimationFrame(draw);
+  requestAnimationFrame(gameLoop);
 }
 
 play();
