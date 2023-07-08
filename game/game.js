@@ -8,6 +8,7 @@ import Pacman from "./pacman.js";
 document.body.style.margin = "0";
 document.body.style.padding = "0";
 document.body.style.overflow = "hidden";
+document.body.style.background = "#111";
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
