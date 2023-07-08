@@ -8,7 +8,6 @@ class Ghost extends Entity {
     this.tilesPerSecond = 5;
     this.framesPerSecond = 10;
     this.numFrames = 7;
-    this.spritesheetSize = 3;
   }
 }
 

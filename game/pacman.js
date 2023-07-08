@@ -10,7 +10,6 @@ class Pacman extends Entity {
 
     this.framesPerSecond = 10;
     this.numFrames = 7;
-    this.spritesheetSize = 4;
   }
 
   update(map, dt, ghosts) {
