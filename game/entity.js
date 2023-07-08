@@ -1,7 +1,7 @@
 "use strict";
 
 class Entity {
-  constructor(x, y) {
+  constructor(x, y, spritesheet) {
     this.prevX = x;
     this.prevY = y;
     this.targetX = x;
@@ -13,6 +13,10 @@ class Entity {
     this.path = null;
     this.pathProgress = 0;
     this.tilesPerSecond = 1;
+
+    this.spritesheet = spritesheet;
+    this.frame = 0;
+    this.frameProgress = 0;
   }
 
   setPath(x, y) {
@@ -88,6 +92,13 @@ class Entity {
     }
     this.x = this.prevX + xDir * this.pathProgress;
     this.y = this.prevY + yDir * this.pathProgress;
+
+    // Update frame
+    this.frameProgress += (dt / 1000) * this.framesPerSecond;
+    if (this.frameProgress >= 1) {
+      this.frame = (this.frame + 1) % this.numFrames;
+      this.frameProgress -= 1;
+    }
   }
 }
 
