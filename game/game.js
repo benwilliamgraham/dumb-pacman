@@ -1,6 +1,7 @@
 "use strict";
 
 import Map from "./map.js";
+import Ghost from "./ghost.js";
 
 // Setup document
 document.body.style.margin = "0";
@@ -12,7 +13,7 @@ document.body.appendChild(canvas);
 
 // Setup canvas
 const mapWidth = 40;
-const mapHeight = 30;
+const mapHeight = 25;
 let tileSize = 1;
 
 function resize() {
@@ -76,6 +77,12 @@ function play() {
     }
   }
 
+  // Add ghosts
+  const ghosts = [];
+  for (let i = 0; i < 4; i++) {
+    ghosts.push(new Ghost(10 + i * 2, 10));
+  }
+
   function gameLoop(time) {
     const path = map.getPath(
       0,
@@ -83,6 +90,10 @@ function play() {
       Math.floor(mouse.x / tileSize),
       Math.floor(mouse.y / tileSize)
     );
+
+    // Update ghosts
+    for (const ghost of ghosts) {
+    }
 
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -102,6 +113,17 @@ function play() {
           );
         }
       }
+    }
+
+    // Draw ghosts
+    for (const ghost of ghosts) {
+      context.fillStyle = "rgba(255, 0, 0, 0.5)";
+      context.fillRect(
+        ghost.x * tileSize,
+        ghost.y * tileSize,
+        tileSize,
+        tileSize
+      );
     }
 
     // Draw path
