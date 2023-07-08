@@ -14,6 +14,15 @@ class Ghost {
     this.pathProgress = 0;
   }
 
+  setPath(path) {
+    // if it's already on a path, keep the next tile
+    if (this.path !== null && path !== null) {
+      this.path = [this.path[0]].concat(path);
+    } else {
+      this.path = path;
+    }
+  }
+
   update(map, dt) {
     if (this.path !== null) {
       this.pathProgress += (dt / 1000) * tilesPerSecond;

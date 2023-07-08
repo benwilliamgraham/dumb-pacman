@@ -99,11 +99,13 @@ function play() {
 
     // Update ghost path
     if (ghostSelected !== null) {
-      ghostSelected.path = map.getPath(
-        ghostSelected.prevX,
-        ghostSelected.prevY,
-        Math.floor(mouse.x / tileSize),
-        Math.floor(mouse.y / tileSize)
+      ghostSelected.setPath(
+        map.getPath(
+          ghostSelected.prevX,
+          ghostSelected.prevY,
+          Math.floor(mouse.x / tileSize),
+          Math.floor(mouse.y / tileSize)
+        )
       );
       ghostSelected = null;
       ghostPath = null;
@@ -129,7 +131,6 @@ function play() {
       const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
 
       if (pixel[1] == 0) {
-        console.log(pixel);
         map.tiles.set(x, y, new Tile(false));
       } else {
         map.tiles.set(x, y, new Tile(true));
