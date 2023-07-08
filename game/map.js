@@ -14,6 +14,8 @@ class Map {
     // using the A* algorithm
 
     // First, if the end point is solid, find the nearest non-solid point
+    x1 = Math.min(Math.max(x1, 0), this.width - 1);
+    y1 = Math.min(Math.max(y1, 0), this.height - 1);
     if (this.tiles.get(x1, y1).solid) {
       const queue = [[x1, y1]];
       const visited = new Array2D(this.width, this.height);
@@ -31,8 +33,8 @@ class Map {
           [0, -1],
           [0, 1],
         ]) {
-          const x2 = (x + dx + this.width) % this.width;
-          const y2 = (y + dy + this.height) % this.height;
+          const x2 = Math.min(Math.max(x + dx, 0), this.width - 1);
+          const y2 = Math.min(Math.max(y + dy, 0), this.height - 1);
           if (!visited.get(x2, y2)) {
             queue.push([x2, y2]);
             visited.set(x2, y2, true);

@@ -72,20 +72,9 @@ function play() {
     y: 0,
   };
   let ghostSelected = null;
-  let ghostPath = null;
   window.addEventListener("mousemove", (event) => {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
-
-    // Update ghost path
-    if (ghostSelected !== null) {
-      ghostPath = map.getPath(
-        ghostSelected.prevX,
-        ghostSelected.prevY,
-        Math.floor(mouse.x / tileSize),
-        Math.floor(mouse.y / tileSize)
-      );
-    }
   });
   window.addEventListener("mousedown", (event) => {
     mouse.x = event.clientX;
@@ -115,7 +104,6 @@ function play() {
         Math.floor(mouse.y / tileSize)
       );
       ghostSelected = null;
-      ghostPath = null;
     }
   });
 
@@ -241,7 +229,13 @@ function play() {
     );
 
     // Draw path
-    if (ghostPath !== null) {
+    if (ghostSelected !== null) {
+      const ghostPath = map.getPath(
+        ghostSelected.prevX,
+        ghostSelected.prevY,
+        Math.floor(mouse.x / tileSize),
+        Math.floor(mouse.y / tileSize)
+      );
       context.strokeStyle = ghostSelected.color;
       context.lineWidth = tileSize / 4;
       context.beginPath();
