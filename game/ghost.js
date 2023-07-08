@@ -21,43 +21,8 @@ class Ghost {
     this.nextPathY = y;
   }
 
-  update(map, dt) {
-    if (this.path !== null) {
-      this.pathProgress += (dt / 1000) * tilesPerSecond;
-      if (this.pathProgress >= 1) {
-        this.prevX = this.targetX;
-        this.prevY = this.targetY;
-
-        this.pathProgress -= 1;
-
-        if (this.nextPathX !== null && this.nextPathY !== null) {
-          this.path = map.getPath(
-            this.prevX,
-            this.prevY,
-            this.nextPathX,
-            this.nextPathY
-          );
-          if (this.path != null && this.path.length > 0) {
-            this.targetX = this.path[0][0];
-            this.targetY = this.path[0][1];
-          } else {
-            this.path = null;
-            this.pathProgress = 0;
-          }
-          this.nextPathX = null;
-          this.nextPathY = null;
-        } else {
-          this.path = this.path.slice(1);
-          if (this.path.length === 0) {
-            this.path = null;
-            this.pathProgress = 0;
-          } else {
-            this.targetX = this.path[0][0];
-            this.targetY = this.path[0][1];
-          }
-        }
-      }
-    } else if (this.nextPathX !== null && this.nextPathY !== null) {
+  checkNewPath(map) {
+    if (this.nextPathX !== null && this.nextPathY !== null) {
       this.path = map.getPath(
         this.prevX,
         this.prevY,
@@ -73,6 +38,33 @@ class Ghost {
       }
       this.nextPathX = null;
       this.nextPathY = null;
+      return true;
+    }
+    return false;
+  }
+
+  update(map, dt) {
+    if (this.path !== null) {
+      this.pathProgress += (dt / 1000) * tilesPerSecond;
+      if (this.pathProgress >= 1) {
+        this.prevX = this.targetX;
+        this.prevY = this.targetY;
+
+        this.pathProgress -= 1;
+
+        if (!this.checkNewPath(map)) {
+          this.path = this.path.slice(1);
+          if (this.path.length === 0) {
+            this.path = null;
+            this.pathProgress = 0;
+          } else {
+            this.targetX = this.path[0][0];
+            this.targetY = this.path[0][1];
+          }
+        }
+      }
+    } else {
+      this.checkNewPath(map);
     }
 
     let xDir = this.targetX - this.prevX;
