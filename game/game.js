@@ -174,6 +174,11 @@ function play() {
       }
     }
 
+    // Check if game is over
+    if (numPellets === 0) {
+      // TODO: Game over
+    }
+
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
 

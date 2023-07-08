@@ -5,7 +5,7 @@ import Entity from "./entity.js";
 class Pacman extends Entity {
   constructor(x, y) {
     super(x, y);
-    this.tilesPerSecond = 3;
+    this.tilesPerSecond = 2;
     this.targetGhost = null;
   }
 
@@ -26,7 +26,7 @@ class Pacman extends Entity {
     }
     this.targetGhost = closestGhost;
     if (this.path === null) {
-      this.setPath(this.targetGhost.x, this.targetGhost.y);
+      this.setPath(this.targetGhost.prevX, this.targetGhost.prevY);
     }
   }
 }
