@@ -16,9 +16,15 @@ class Pacman extends Entity {
     let closestGhost = null;
     let closestDistance = Infinity;
     for (const ghost of ghosts) {
-      const distance = Math.sqrt(
-        Math.pow(this.x - ghost.x, 2) + Math.pow(this.y - ghost.y, 2)
-      );
+      const distance =
+        Math.min(
+          Math.abs(this.x - ghost.x),
+          map.width - Math.abs(this.x - ghost.x)
+        ) +
+        Math.min(
+          Math.abs(this.y - ghost.y),
+          map.height - Math.abs(this.y - ghost.y)
+        );
       if (distance < closestDistance) {
         closestGhost = ghost;
         closestDistance = distance;
