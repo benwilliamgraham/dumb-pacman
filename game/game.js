@@ -154,6 +154,9 @@ function play() {
       ghost.update(map, dt);
     }
 
+    // Update pacman
+    pacman.update(map, dt, ghosts);
+
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
 
