@@ -35,6 +35,7 @@ window.addEventListener("resize", resize);
 resize();
 
 const context = canvas.getContext("2d");
+context.imageSmoothingEnabled = false;
 
 const images = {
   pacman: new Image(),

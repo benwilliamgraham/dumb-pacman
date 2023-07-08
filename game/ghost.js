@@ -8,7 +8,7 @@ class Ghost extends Entity {
     this.color = color;
     this.tilesPerSecond = 5;
     this.framesPerSecond = 10;
-    this.numFrames = 7;
+    this.numFrames = 2;
   }
 }
 
