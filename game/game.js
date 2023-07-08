@@ -38,6 +38,10 @@ const context = canvas.getContext("2d");
 
 const images = {
   pacman: new Image(),
+  pink: new Image(),
+  red: new Image(),
+  orange: new Image(),
+  blue: new Image(),
 };
 const background = new Image();
 background.src = "assets/textures/level 1.png";
@@ -146,12 +150,17 @@ function play() {
 
   // Add ghosts
   const ghosts = [];
-  for (let i = 0; i < 4; i++) {
-    ghosts.push(new Ghost(15 + i * 2, 11));
+  for (let [x, y, spritesheet] of [
+    [15, 11, images.pink],
+    [17, 11, images.red],
+    [19, 11, images.blue],
+    [21, 11, images.orange],
+  ]) {
+    ghosts.push(new Ghost(x, y, spritesheet));
   }
 
   // Add pacman
-  const pacman = new Pacman(7, 7);
+  const pacman = new Pacman(7, 7, images.pacman);
 
   let lastTime = 0;
   function gameLoop(time) {
@@ -204,8 +213,12 @@ function play() {
 
     // Draw ghosts
     for (const ghost of ghosts) {
-      context.fillStyle = "rgba(255, 0, 0, 0.5)";
-      context.fillRect(
+      context.drawImage(
+        ghost.spritesheet,
+        0,
+        0,
+        ghost.spritesheet.width / ghost.spritesheetSize,
+        ghost.spritesheet.height / ghost.spritesheetSize,
         ghost.x * tileSize,
         ghost.y * tileSize,
         tileSize,
@@ -214,8 +227,12 @@ function play() {
     }
 
     // Draw pacman
-    context.fillStyle = "rgba(255, 255, 0, 0.5)";
-    context.fillRect(
+    context.drawImage(
+      pacman.spritesheet,
+      0,
+      0,
+      pacman.spritesheet.width / pacman.spritesheetSize,
+      pacman.spritesheet.height / pacman.spritesheetSize,
       pacman.x * tileSize,
       pacman.y * tileSize,
       tileSize,

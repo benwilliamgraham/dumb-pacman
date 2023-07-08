@@ -3,10 +3,14 @@
 import Entity from "./entity.js";
 
 class Pacman extends Entity {
-  constructor(x, y) {
-    super(x, y);
-    this.tilesPerSecond = 2;
+  constructor(x, y, spritesheet) {
+    super(x, y, spritesheet);
+    this.tilesPerSecond = 2.5;
     this.targetGhost = null;
+
+    this.framesPerSecond = 10;
+    this.numFrames = 7;
+    this.spritesheetSize = 4;
   }
 
   update(map, dt, ghosts) {
