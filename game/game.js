@@ -37,10 +37,11 @@ resize();
 const context = canvas.getContext("2d");
 
 const images = {
-  demo: new Image(),
-  background: new Image(),
+  pacman: new Image(),
 };
-images.background.onload = () => {
+const background = new Image();
+background.src = "assets/textures/level 1.png";
+background.onload = () => {
   play();
 };
 
@@ -51,12 +52,16 @@ function loadImages() {
 }
 
 class Tile {
-  constructor(solid) {
+  constructor(solid, hasPellet = false) {
     this.solid = solid;
+    this.hasPellet = hasPellet;
   }
 }
 
 function play() {
+  // Load images
+  loadImages();
+
   // Setup controls
   const mouse = {
     x: 0,
@@ -111,24 +116,28 @@ function play() {
 
   // Sample background image
   const backgroundCanvas = document.createElement("canvas");
-  backgroundCanvas.width = images.background.width;
-  backgroundCanvas.height = images.background.height;
+  backgroundCanvas.width = background.width;
+  backgroundCanvas.height = background.height;
   const backgroundContext = backgroundCanvas.getContext("2d");
-  backgroundContext.drawImage(images.background, 0, 0);
+  backgroundContext.drawImage(background, 0, 0);
 
   // Create map
+  let numPellets = 0;
   const map = new Map(mapWidth, mapHeight);
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
       // Sample background image
-      const imgX = Math.floor(((x + 0.5) / mapWidth) * images.background.width);
-      const imgY = Math.floor(
-        ((y + 0.5) / mapHeight) * images.background.height
-      );
+      const imgX = Math.floor(((x + 0.5) / mapWidth) * background.width);
+      const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
       const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
 
       if (pixel[1] == 0) {
-        map.tiles.set(x, y, new Tile(false));
+        if (x > 0 && x < mapWidth - 1 && y > 0 && y < mapHeight - 1) {
+          numPellets++;
+          map.tiles.set(x, y, new Tile(false, true));
+        } else {
+          map.tiles.set(x, y, new Tile(false));
+        }
       } else {
         map.tiles.set(x, y, new Tile(true));
       }
@@ -157,11 +166,36 @@ function play() {
     // Update pacman
     pacman.update(map, dt, ghosts);
 
+    // Update pellets
+    for (let [x, y] of [[pacman.prevX, pacman.prevY]]) {
+      if (map.tiles.get(x, y).hasPellet) {
+        map.tiles.get(x, y).hasPellet = false;
+        numPellets--;
+      }
+    }
+
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw background
-    context.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+    context.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+    // Draw pellets
+    context.fillStyle = "rgba(255, 255, 255, 1.0)";
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        if (map.tiles.get(x, y).hasPellet) {
+          context.beginPath();
+          context.fillRect(
+            x * tileSize + tileSize / 2 - tileSize / 8,
+            y * tileSize + tileSize / 2 - tileSize / 8,
+            tileSize / 4,
+            tileSize / 4
+          );
+          context.fill();
+        }
+      }
+    }
 
     // Draw ghosts
     for (const ghost of ghosts) {
@@ -220,5 +254,3 @@ function play() {
   }
   requestAnimationFrame(gameLoop);
 }
-
-loadImages();
