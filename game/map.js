@@ -7,7 +7,6 @@ class Map {
     this.width = width;
     this.height = height;
     this.tiles = new Array2D(width, height);
-    this.visibility = new Array2D(width, height);
   }
 
   getPath(x0, y0, x1, y1) {
@@ -15,8 +14,12 @@ class Map {
     // using the A* algorithm
 
     // heuristic function
+    const width = this.width;
+    const height = this.height;
     function heuristic(x0, y0, x1, y1) {
-      return Math.abs(x0 - x1) + Math.abs(y0 - y1);
+      const dx = Math.min(Math.abs(x1 - x0), width - Math.abs(x1 - x0));
+      const dy = Math.min(Math.abs(y1 - y0), height - Math.abs(y1 - y0));
+      return dx + dy;
     }
 
     // openSet contains the nodes that have been discovered
@@ -71,9 +74,16 @@ class Map {
         [x, y - 1],
         [x, y + 1],
       ]) {
-        // skip neighbors that are outside the map
-        if (nx < 0 || nx >= this.width || ny < 0 || ny >= this.height) {
-          continue;
+        // wrap around the map
+        if (nx < 0) {
+          nx += width;
+        } else if (nx >= width) {
+          nx -= width;
+        }
+        if (ny < 0) {
+          ny += height;
+        } else if (ny >= height) {
+          ny -= height;
         }
 
         // skip neighbors that are walls

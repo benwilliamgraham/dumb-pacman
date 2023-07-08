@@ -1,7 +1,5 @@
 "use strict";
 
-import Array2D from "./array2d.js";
-import Guard from "./guard.js";
 import Map from "./map.js";
 
 // Setup document
@@ -48,7 +46,6 @@ window.addEventListener("mousemove", (event) => {
 
 const images = {
   demo: new Image(),
-  guard: new Image(),
 };
 
 function loadImages() {
@@ -79,18 +76,6 @@ function play() {
     }
   }
 
-  // Create guards
-  const guards = [];
-  for (let i = 0; i < 10; i++) {
-    guards.push(
-      new Guard(
-        Math.floor(Math.random() * mapWidth),
-        Math.floor(Math.random() * mapHeight),
-        Math.floor(Math.random() * 4) * 90
-      )
-    );
-  }
-
   function gameLoop(time) {
     const path = map.getPath(
       0,
@@ -98,12 +83,6 @@ function play() {
       Math.floor(mouse.x / tileSize),
       Math.floor(mouse.y / tileSize)
     );
-
-    // Update guards and compute visibility
-    map.visibility.fill(false);
-    for (const guard of guards) {
-      guard.update(map);
-    }
 
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -122,27 +101,12 @@ function play() {
             tileSize
           );
         }
-        // Cover with gray if not visible
-        if (!map.visibility.get(x, y)) {
-          context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-        }
       }
-    }
-
-    // Draw guards
-    for (const guard of guards) {
-      context.drawImage(
-        images.guard,
-        guard.x * tileSize,
-        guard.y * tileSize,
-        tileSize,
-        tileSize
-      );
     }
 
     // Draw path
     if (path !== null) {
-      context.strokeStyle = "red";
+      context.strokeStyle = "rgba(0, 0, 0, 0.5)";
       context.lineWidth = 2;
       context.beginPath();
       context.moveTo(
@@ -150,6 +114,17 @@ function play() {
         path[0][1] * tileSize + tileSize / 2
       );
       for (let i = 1; i < path.length; i++) {
+        // Determine if the path has wrapped around the map
+        const xDiff = Math.abs(path[i][0] - path[i - 1][0]);
+        const yDiff = Math.abs(path[i][1] - path[i - 1][1]);
+        if (xDiff > 1 || yDiff > 1) {
+          context.stroke();
+          context.beginPath();
+          context.moveTo(
+            path[i][0] * tileSize + tileSize / 2,
+            path[i][1] * tileSize + tileSize / 2
+          );
+        }
         context.lineTo(
           path[i][0] * tileSize + tileSize / 2,
           path[i][1] * tileSize + tileSize / 2
