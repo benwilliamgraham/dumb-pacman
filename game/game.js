@@ -83,7 +83,11 @@ function play() {
     ghosts.push(new Ghost(10 + i * 2, 10));
   }
 
+  let lastTime = 0;
   function gameLoop(time) {
+    const dt = (time - lastTime) % 1000; // Prevents delta time from getting too large
+    lastTime = time;
+
     const path = map.getPath(
       0,
       0,
@@ -93,7 +97,15 @@ function play() {
 
     // Update ghosts
     for (const ghost of ghosts) {
+      ghost.update(map, dt);
     }
+
+    ghosts[0].path = map.getPath(
+      ghosts[0].prevX,
+      ghosts[0].prevY,
+      Math.floor(mouse.x / tileSize),
+      Math.floor(mouse.y / tileSize)
+    );
 
     // Clear canvas
     context.clearRect(0, 0, canvas.width, canvas.height);

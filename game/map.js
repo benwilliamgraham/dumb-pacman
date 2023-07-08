@@ -75,16 +75,8 @@ class Map {
         [x, y + 1],
       ]) {
         // wrap around the map
-        if (nx < 0) {
-          nx += width;
-        } else if (nx >= width) {
-          nx -= width;
-        }
-        if (ny < 0) {
-          ny += height;
-        } else if (ny >= height) {
-          ny -= height;
-        }
+        nx = (nx + width) % width;
+        ny = (ny + height) % height;
 
         // skip neighbors that are walls
         if (this.tiles.get(nx, ny).solid) {
