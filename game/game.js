@@ -93,11 +93,12 @@ function play() {
 
     // Check if mouse is over ghost
     for (const ghost of ghosts) {
+      // make hitbox bigger
       if (
-        mouse.x >= ghost.x * tileSize &&
-        mouse.x < (ghost.x + 1) * tileSize &&
-        mouse.y >= ghost.y * tileSize &&
-        mouse.y < (ghost.y + 1) * tileSize
+        mouse.x >= (ghost.x - 0.5) * tileSize &&
+        mouse.x < (ghost.x + 1.5) * tileSize &&
+        mouse.y >= (ghost.y - 0.5) * tileSize &&
+        mouse.y < (ghost.y + 1.5) * tileSize
       ) {
         ghostSelected = ghost;
       }
