@@ -8,7 +8,7 @@ import Pacman from "./pacman.js";
 document.body.style.margin = "0";
 document.body.style.padding = "0";
 document.body.style.overflow = "hidden";
-document.body.style.background = "#111";
+document.body.style.background = "#000";
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
@@ -19,13 +19,13 @@ const mapHeight = 23;
 let tileSize = 1;
 
 function resize() {
-  const aspect = mapWidth / mapHeight;
+  const aspect = mapWidth / (mapHeight + 2);
   const width = window.innerWidth;
   const height = window.innerHeight;
   if (width / height > aspect) {
     canvas.width = height * aspect;
     canvas.height = height;
-    tileSize = height / mapHeight;
+    tileSize = height / (mapHeight + 2);
   } else {
     canvas.width = width;
     canvas.height = width / aspect;
@@ -118,6 +118,8 @@ function play() {
 
   // Create map
   let numPellets = 0;
+  let numLives = 3;
+  let score = 0;
   const map = new Map(mapWidth, mapHeight);
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
@@ -171,6 +173,7 @@ function play() {
       if (map.tiles.get(x, y).hasPellet) {
         map.tiles.get(x, y).hasPellet = false;
         numPellets--;
+        score += 50;
       }
     }
 
@@ -183,7 +186,13 @@ function play() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw background
-    context.drawImage(background, 0, 0, canvas.width, canvas.height);
+    context.drawImage(
+      background,
+      0,
+      0,
+      map.width * tileSize,
+      map.height * tileSize
+    );
 
     // Draw pellets
     context.fillStyle = "rgba(255, 255, 255, 1.0)";
@@ -285,6 +294,33 @@ function play() {
       }
       context.stroke();
     }
+
+    // Draw lives
+    context.drawImage(
+      images.pacman,
+      (2 * images.pacman.width) / pacman.numFrames,
+      0,
+      images.pacman.width / pacman.numFrames,
+      images.pacman.height,
+      tileSize * 2,
+      (mapHeight + 0.25) * tileSize,
+      ((tileSize * 1.5) / 12) * 9,
+      tileSize * 1.5
+    );
+    context.fillStyle = "#FFFF00";
+    context.font = "bold " + tileSize + "px monospace";
+    context.fillText(
+      "x " + numLives,
+      tileSize * 3.5,
+      mapHeight * tileSize + tileSize * 1.5
+    );
+
+    // Draw score
+    context.fillText(
+      "Score: " + String(score).padStart(6, "0"),
+      tileSize * map.width - tileSize * 10,
+      mapHeight * tileSize + tileSize * 1.5
+    );
 
     requestAnimationFrame(gameLoop);
   }
