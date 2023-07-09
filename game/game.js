@@ -198,11 +198,17 @@ function play() {
       // Check if game is over
       if (numPellets === 0) {
         level = (level % 3) + 1;
-        background.onload = () => {
-          initMap();
-          [pacman, ghosts] = createEntities();
-        };
-        background.src = `assets/textures/level${level}.png`;
+        gameMode = "loading";
+
+        // Wait 3 seconds before loading next level
+        setTimeout(() => {
+          background.onload = () => {
+            initMap();
+            [pacman, ghosts] = createEntities();
+            gameMode = "playing";
+          };
+          background.src = `assets/textures/level${level}.png`;
+        }, 3000);
       }
 
       // Check if pacman is hit
