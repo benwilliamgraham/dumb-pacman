@@ -238,9 +238,9 @@ function play() {
       pacman.spritesheet.width / pacman.numFrames,
       pacman.spritesheet.height,
       pacman.x * tileSize,
-      pacman.y * tileSize,
+      pacman.y * tileSize - tileSize / 6,
       tileSize,
-      tileSize
+      tileSize + tileSize / 6
     );
 
     if (pacman.direction === "left") {
