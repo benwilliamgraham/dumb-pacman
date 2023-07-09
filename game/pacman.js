@@ -63,9 +63,8 @@ class Pacman extends Entity {
       }
     }
     this.targetGhost = closestGhost;
-    if (this.path === null) {
-      this.setPath(this.targetGhost.prevX, this.targetGhost.prevY);
-    }
+
+    this.setPath(closestGhost.prevX, closestGhost.prevY);
   }
 }
 
