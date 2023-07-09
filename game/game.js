@@ -211,10 +211,12 @@ function play() {
 
             // Change to death animation
             if (pacman.direction === "left") {
-              pacman.spritesheet = images.leftmanDeath;
+              pacman.spritesheet = images.leftmandeath;
             } else {
-              pacman.spritesheet = images.rightmanDeath;
+              pacman.spritesheet = images.rightmandeath;
             }
+            pacman.numFrames = 12;
+            pacman.framesPerSecond = 5;
 
             // Reset ghost path
             for (const ghost of ghosts) {
@@ -227,10 +229,16 @@ function play() {
 
               // Reset entities
               [pacman, ghosts] = createEntities();
-            }, 2000);
+            }, 1700);
           }
         }
       }
+    }
+
+    // Animate sprites
+    pacman.animate(dt);
+    for (const ghost of ghosts) {
+      ghost.animate(dt);
     }
 
     // Clear canvas
@@ -278,10 +286,14 @@ function play() {
     }
 
     // Draw pacman reversed if moving left
-    if (pacman.direction === "left") {
-      pacman.spritesheet = images.leftman;
-    } else {
-      pacman.spritesheet = images.rightman;
+    if (gameMode === "playing") {
+      pacman.numFrames = 4;
+      pacman.framesPerSecond = 10;
+      if (pacman.direction === "left") {
+        pacman.spritesheet = images.leftman;
+      } else {
+        pacman.spritesheet = images.rightman;
+      }
     }
 
     context.drawImage(
