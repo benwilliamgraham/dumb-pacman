@@ -51,7 +51,8 @@ const images = {
   rightmandeath: new Image(),
 };
 const background = new Image();
-background.src = "assets/textures/level 1.png";
+let level = 1;
+background.src = "assets/textures/level1.png";
 background.onload = () => {
   play();
 };
@@ -134,7 +135,7 @@ function play() {
       const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
       const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
 
-      if (pixel[1] == 0) {
+      if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
         if (x > 0 && x < mapWidth - 1 && y > 0 && y < mapHeight - 1) {
           numPellets++;
           map.tiles.set(x, y, new Tile(false, true));
@@ -156,11 +157,11 @@ function play() {
       [19, 11, images.blue, "#00FFF988"],
       [21, 11, images.orange, "#FF810088"],
     ]) {
-      ghosts.push(new Ghost(x, y, spritesheet, color));
+      ghosts.push(new Ghost(x, [y, y, y + 1][level - 1], spritesheet, color));
     }
 
     // Add pacman
-    const pacman = new Pacman(7, 7, images.leftman);
+    const pacman = new Pacman([7, 6, 5][level - 1], 7, images.leftman);
 
     return [pacman, ghosts];
   }
@@ -350,9 +351,9 @@ function play() {
     // Draw lives
     context.drawImage(
       images.rightman,
-      (2 * images.rightman.width) / pacman.numFrames,
+      (2 * images.rightman.width) / 4,
       0,
-      images.rightman.width / pacman.numFrames,
+      images.rightman.width / 4,
       images.rightman.height,
       tileSize * 2,
       (mapHeight + 0.25) * tileSize,
