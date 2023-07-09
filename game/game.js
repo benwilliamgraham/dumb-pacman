@@ -63,6 +63,13 @@ function loadImages() {
   }
 }
 
+const sounds = {
+  death: new Audio("assets/audio/death.mp3"),
+  collect: new Audio("assets/audio/collect.mp3"),
+  ambient: new Audio("assets/audio/ambient.mp3"),
+  progress: new Audio("assets/audio/progress.mp3"),
+};
+
 class Tile {
   constructor(solid, hasPellet = false) {
     this.solid = solid;
@@ -150,6 +157,7 @@ function play() {
       }
     }
   }
+  initMap();
 
   function createEntities() {
     // Add ghosts
@@ -191,6 +199,7 @@ function play() {
         if (map.tiles.get(x, y).hasPellet) {
           map.tiles.get(x, y).hasPellet = false;
           numPellets--;
+          sounds.collect.play();
           score += 50;
         }
       }
@@ -218,6 +227,7 @@ function play() {
           Math.abs(pacman.y - ghost.y) < 0.5
         ) {
           numLives--;
+          sounds.death.play();
           if (numLives === 0) {
             // TODO: Game over
           } else {
