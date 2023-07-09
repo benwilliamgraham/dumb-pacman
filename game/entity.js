@@ -92,7 +92,9 @@ class Entity {
     }
     this.x = this.prevX + xDir * this.pathProgress;
     this.y = this.prevY + yDir * this.pathProgress;
+  }
 
+  animate(dt) {
     // Update frame
     this.frameProgress += (dt / 1000) * this.framesPerSecond;
     if (this.frameProgress >= 1) {

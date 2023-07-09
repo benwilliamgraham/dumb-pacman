@@ -18,6 +18,8 @@ const mapWidth = 37;
 const mapHeight = 23;
 let tileSize = 1;
 
+let context = null;
+
 function resize() {
   const aspect = mapWidth / (mapHeight + 2);
   const width = window.innerWidth;
@@ -31,12 +33,12 @@ function resize() {
     canvas.height = width / aspect;
     tileSize = width / mapWidth;
   }
+
+  context = canvas.getContext("2d");
+  context.imageSmoothingEnabled = false;
 }
 window.addEventListener("resize", resize);
 resize();
-
-const context = canvas.getContext("2d");
-context.imageSmoothingEnabled = false;
 
 const images = {
   pink: new Image(),
@@ -123,6 +125,7 @@ function play() {
   let numPellets = 0;
   let numLives = 3;
   let score = 0;
+  let gameMode = "playing";
   const map = new Map(mapWidth, mapHeight);
   for (let y = 0; y < mapHeight; y++) {
     for (let x = 0; x < mapWidth; x++) {
@@ -144,45 +147,90 @@ function play() {
     }
   }
 
-  // Add ghosts
-  const ghosts = [];
-  for (let [x, y, spritesheet, color] of [
-    [15, 11, images.pink, "#E4639F88"],
-    [17, 11, images.red, "#CA090988"],
-    [19, 11, images.blue, "#00FFF988"],
-    [21, 11, images.orange, "#FF810088"],
-  ]) {
-    ghosts.push(new Ghost(x, y, spritesheet, color));
+  function createEntities() {
+    // Add ghosts
+    const ghosts = [];
+    for (let [x, y, spritesheet, color] of [
+      [15, 11, images.pink, "#E4639F88"],
+      [17, 11, images.red, "#CA090988"],
+      [19, 11, images.blue, "#00FFF988"],
+      [21, 11, images.orange, "#FF810088"],
+    ]) {
+      ghosts.push(new Ghost(x, y, spritesheet, color));
+    }
+
+    // Add pacman
+    const pacman = new Pacman(7, 7, images.leftman);
+
+    return [pacman, ghosts];
   }
 
-  // Add pacman
-  const pacman = new Pacman(7, 7, images.leftman);
+  // Create entities
+  let [pacman, ghosts] = createEntities();
 
   let lastTime = 0;
   function gameLoop(time) {
     const dt = (time - lastTime) % 1000; // Prevents delta time from getting too large
     lastTime = time;
 
-    // Update ghosts
-    for (const ghost of ghosts) {
-      ghost.update(map, dt);
-    }
-
-    // Update pacman
-    pacman.update(map, dt, ghosts);
-
-    // Update pellets
-    for (let [x, y] of [[pacman.prevX, pacman.prevY]]) {
-      if (map.tiles.get(x, y).hasPellet) {
-        map.tiles.get(x, y).hasPellet = false;
-        numPellets--;
-        score += 50;
+    if (gameMode === "playing") {
+      // Update ghosts
+      for (const ghost of ghosts) {
+        ghost.update(map, dt);
       }
-    }
 
-    // Check if game is over
-    if (numPellets === 0) {
-      // TODO: Game over
+      // Update pacman
+      pacman.update(map, dt, ghosts);
+
+      // Update pellets
+      for (let [x, y] of [[pacman.prevX, pacman.prevY]]) {
+        if (map.tiles.get(x, y).hasPellet) {
+          map.tiles.get(x, y).hasPellet = false;
+          numPellets--;
+          score += 50;
+        }
+      }
+
+      // Check if game is over
+      if (numPellets === 0) {
+        // TODO: Game over
+      }
+
+      // Check if pacman is hit
+      for (const ghost of ghosts) {
+        if (
+          Math.abs(pacman.x - ghost.x) < 0.5 &&
+          Math.abs(pacman.y - ghost.y) < 0.5
+        ) {
+          numLives--;
+          if (numLives === 0) {
+            // TODO: Game over
+          } else {
+            // Change game mode
+            gameMode = "respawning";
+
+            // Change to death animation
+            if (pacman.direction === "left") {
+              pacman.spritesheet = images.leftmanDeath;
+            } else {
+              pacman.spritesheet = images.rightmanDeath;
+            }
+
+            // Reset ghost path
+            for (const ghost of ghosts) {
+              ghost.path = null;
+            }
+
+            // Wait 2 seconds
+            setTimeout(() => {
+              gameMode = "playing";
+
+              // Reset entities
+              [pacman, ghosts] = createEntities();
+            }, 2000);
+          }
+        }
+      }
     }
 
     // Clear canvas
