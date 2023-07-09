@@ -128,22 +128,25 @@ function play() {
   let score = 0;
   let gameMode = "playing";
   const map = new Map(mapWidth, mapHeight);
-  for (let y = 0; y < mapHeight; y++) {
-    for (let x = 0; x < mapWidth; x++) {
-      // Sample background image
-      const imgX = Math.floor(((x + 0.5) / mapWidth) * background.width);
-      const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
-      const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
 
-      if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
-        if (x > 0 && x < mapWidth - 1 && y > 0 && y < mapHeight - 1) {
-          numPellets++;
-          map.tiles.set(x, y, new Tile(false, true));
+  function initMap() {
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        // Sample background image
+        const imgX = Math.floor(((x + 0.5) / mapWidth) * background.width);
+        const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
+        const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
+
+        if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
+          if (x > 0 && x < mapWidth - 1 && y > 0 && y < mapHeight - 1) {
+            numPellets++;
+            map.tiles.set(x, y, new Tile(false, true));
+          } else {
+            map.tiles.set(x, y, new Tile(false));
+          }
         } else {
-          map.tiles.set(x, y, new Tile(false));
+          map.tiles.set(x, y, new Tile(true));
         }
-      } else {
-        map.tiles.set(x, y, new Tile(true));
       }
     }
   }
@@ -194,7 +197,12 @@ function play() {
 
       // Check if game is over
       if (numPellets === 0) {
-        // TODO: Game over
+        level = (level % 3) + 1;
+        background.onload = () => {
+          initMap();
+          [pacman, ghosts] = createEntities();
+        };
+        background.src = `assets/textures/level${level}.png`;
       }
 
       // Check if pacman is hit
