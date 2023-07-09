@@ -53,15 +53,13 @@ const images = {
 const background = new Image();
 let level = 1;
 background.src = "assets/textures/level1.png";
-background.onload = () => {
-  play();
-};
 
 function loadImages() {
   for (const key in images) {
     images[key].src = `assets/textures/${key}.png`;
   }
 }
+loadImages();
 
 const sounds = {
   death: new Audio("assets/audio/death.mp3"),
@@ -69,6 +67,10 @@ const sounds = {
   ambient: new Audio("assets/audio/ambient.mp3"),
   progress: new Audio("assets/audio/progress.mp3"),
 };
+sounds.collect.volume = 0.4;
+
+sounds.ambient.loop = true;
+sounds.ambient.volume = 0.2;
 
 class Tile {
   constructor(solid, hasPellet = false) {
@@ -78,8 +80,7 @@ class Tile {
 }
 
 function play() {
-  // Load images
-  loadImages();
+  sounds.ambient.play();
 
   // Setup controls
   const mouse = {
@@ -124,40 +125,12 @@ function play() {
 
   // Create map
   let numPellets = 0;
-  let numLives = 3;
+  let numLives = 5;
   let score = 0;
-  let gameMode = "playing";
+  let gameMode = "loading";
   const map = new Map(mapWidth, mapHeight);
-
-  function initMap() {
-    // Sample background image
-    const backgroundCanvas = document.createElement("canvas");
-    backgroundCanvas.width = background.width;
-    backgroundCanvas.height = background.height;
-    const backgroundContext = backgroundCanvas.getContext("2d");
-    backgroundContext.drawImage(background, 0, 0);
-
-    for (let y = 0; y < mapHeight; y++) {
-      for (let x = 0; x < mapWidth; x++) {
-        // Sample background image
-        const imgX = Math.floor(((x + 0.5) / mapWidth) * background.width);
-        const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
-        const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
-
-        if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
-          if (x > 0 && x < mapWidth - 1 && y > 0 && y < mapHeight - 1) {
-            numPellets++;
-            map.tiles.set(x, y, new Tile(false, true));
-          } else {
-            map.tiles.set(x, y, new Tile(false));
-          }
-        } else {
-          map.tiles.set(x, y, new Tile(true));
-        }
-      }
-    }
-  }
-  initMap();
+  let pacman = null;
+  let ghosts = null;
 
   function createEntities() {
     // Add ghosts
@@ -177,8 +150,40 @@ function play() {
     return [pacman, ghosts];
   }
 
-  // Create entities
-  let [pacman, ghosts] = createEntities();
+  function initMap() {
+    background.onload = () => {
+      // Sample background image
+      const backgroundCanvas = document.createElement("canvas");
+      backgroundCanvas.width = background.width;
+      backgroundCanvas.height = background.height;
+      const backgroundContext = backgroundCanvas.getContext("2d");
+      backgroundContext.drawImage(background, 0, 0);
+
+      for (let y = 0; y < mapHeight; y++) {
+        for (let x = 0; x < mapWidth; x++) {
+          // Sample background image
+          const imgX = Math.floor(((x + 0.5) / mapWidth) * background.width);
+          const imgY = Math.floor(((y + 0.5) / mapHeight) * background.height);
+          const pixel = backgroundContext.getImageData(imgX, imgY, 1, 1).data;
+
+          if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
+            numPellets++;
+            map.tiles.set(x, y, new Tile(false, true));
+          } else {
+            map.tiles.set(x, y, new Tile(true));
+          }
+        }
+      }
+
+      // Create entities
+      [pacman, ghosts] = createEntities();
+
+      // Start game
+      gameMode = "playing";
+    };
+    background.src = `assets/textures/level${level}.png`;
+  }
+  initMap();
 
   let lastTime = 0;
   function gameLoop(time) {
@@ -206,17 +211,13 @@ function play() {
 
       // Check if game is over
       if (numPellets === 0) {
+        sounds.progress.play();
         level = (level % 3) + 1;
         gameMode = "loading";
 
         // Wait 3 seconds before loading next level
         setTimeout(() => {
-          background.onload = () => {
-            initMap();
-            [pacman, ghosts] = createEntities();
-            gameMode = "playing";
-          };
-          background.src = `assets/textures/level${level}.png`;
+          initMap();
         }, 3000);
       }
 
@@ -228,178 +229,282 @@ function play() {
         ) {
           numLives--;
           sounds.death.play();
-          if (numLives === 0) {
-            // TODO: Game over
+
+          // Change game mode
+          gameMode = "respawning";
+
+          // Change to death animation
+          if (pacman.direction === "left") {
+            pacman.spritesheet = images.leftmandeath;
           } else {
-            // Change game mode
-            gameMode = "respawning";
+            pacman.spritesheet = images.rightmandeath;
+          }
+          pacman.numFrames = 12;
+          pacman.framesPerSecond = 5;
 
-            // Change to death animation
-            if (pacman.direction === "left") {
-              pacman.spritesheet = images.leftmandeath;
-            } else {
-              pacman.spritesheet = images.rightmandeath;
+          // Reset ghost path
+          for (const ghost of ghosts) {
+            ghost.path = null;
+          }
+
+          // Wait 2 seconds
+          setTimeout(() => {
+            if (numLives === 0) {
+              gameMode = "gameover";
+              titleScreen();
+              return;
             }
-            pacman.numFrames = 12;
-            pacman.framesPerSecond = 5;
+            gameMode = "playing";
 
-            // Reset ghost path
-            for (const ghost of ghosts) {
-              ghost.path = null;
-            }
+            // Reset entities
+            [pacman, ghosts] = createEntities();
+          }, 1700);
+        }
+      }
+    }
 
-            // Wait 2 seconds
-            setTimeout(() => {
-              gameMode = "playing";
+    if (gameMode !== "loading") {
+      // Animate sprites
+      pacman.animate(dt);
+      for (const ghost of ghosts) {
+        ghost.animate(dt);
+      }
 
-              // Reset entities
-              [pacman, ghosts] = createEntities();
-            }, 1700);
+      // Clear canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background
+      context.drawImage(
+        background,
+        0,
+        0,
+        map.width * tileSize,
+        map.height * tileSize
+      );
+
+      // Draw pellets
+      context.fillStyle = "rgba(255, 255, 255, 1.0)";
+      for (let y = 0; y < mapHeight; y++) {
+        for (let x = 0; x < mapWidth; x++) {
+          if (map.tiles.get(x, y).hasPellet) {
+            context.beginPath();
+            context.fillRect(
+              x * tileSize + tileSize / 2 - tileSize / 8,
+              y * tileSize + tileSize / 2 - tileSize / 8,
+              tileSize / 4,
+              tileSize / 4
+            );
+            context.fill();
           }
         }
       }
-    }
 
-    // Animate sprites
-    pacman.animate(dt);
-    for (const ghost of ghosts) {
-      ghost.animate(dt);
-    }
+      // Draw ghosts
+      for (const ghost of ghosts) {
+        context.drawImage(
+          ghost.spritesheet,
+          (ghost.spritesheet.width / ghost.numFrames) * ghost.frame,
+          0,
+          ghost.spritesheet.width / ghost.numFrames,
+          ghost.spritesheet.height,
+          ghost.x * tileSize,
+          ghost.y * tileSize,
+          tileSize,
+          tileSize
+        );
+      }
 
-    // Clear canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw background
-    context.drawImage(
-      background,
-      0,
-      0,
-      map.width * tileSize,
-      map.height * tileSize
-    );
-
-    // Draw pellets
-    context.fillStyle = "rgba(255, 255, 255, 1.0)";
-    for (let y = 0; y < mapHeight; y++) {
-      for (let x = 0; x < mapWidth; x++) {
-        if (map.tiles.get(x, y).hasPellet) {
-          context.beginPath();
-          context.fillRect(
-            x * tileSize + tileSize / 2 - tileSize / 8,
-            y * tileSize + tileSize / 2 - tileSize / 8,
-            tileSize / 4,
-            tileSize / 4
-          );
-          context.fill();
+      // Draw pacman reversed if moving left
+      if (gameMode === "playing") {
+        pacman.numFrames = 4;
+        pacman.framesPerSecond = 10;
+        if (pacman.direction === "left") {
+          pacman.spritesheet = images.leftman;
+        } else {
+          pacman.spritesheet = images.rightman;
         }
       }
-    }
 
-    // Draw ghosts
-    for (const ghost of ghosts) {
       context.drawImage(
-        ghost.spritesheet,
-        (ghost.spritesheet.width / ghost.numFrames) * ghost.frame,
+        pacman.spritesheet,
+        (pacman.spritesheet.width / pacman.numFrames) * pacman.frame,
         0,
-        ghost.spritesheet.width / ghost.numFrames,
-        ghost.spritesheet.height,
-        ghost.x * tileSize,
-        ghost.y * tileSize,
+        pacman.spritesheet.width / pacman.numFrames,
+        pacman.spritesheet.height,
+        pacman.x * tileSize,
+        pacman.y * tileSize - tileSize / 6,
         tileSize,
-        tileSize
+        tileSize + tileSize / 6
       );
-    }
 
-    // Draw pacman reversed if moving left
-    if (gameMode === "playing") {
-      pacman.numFrames = 4;
-      pacman.framesPerSecond = 10;
-      if (pacman.direction === "left") {
-        pacman.spritesheet = images.leftman;
-      } else {
-        pacman.spritesheet = images.rightman;
-      }
-    }
-
-    context.drawImage(
-      pacman.spritesheet,
-      (pacman.spritesheet.width / pacman.numFrames) * pacman.frame,
-      0,
-      pacman.spritesheet.width / pacman.numFrames,
-      pacman.spritesheet.height,
-      pacman.x * tileSize,
-      pacman.y * tileSize - tileSize / 6,
-      tileSize,
-      tileSize + tileSize / 6
-    );
-
-    // Draw path
-    if (ghostSelected !== null) {
-      const ghostPath = map.getPath(
-        ghostSelected.prevX,
-        ghostSelected.prevY,
-        Math.floor(mouse.x / tileSize),
-        Math.floor(mouse.y / tileSize)
-      );
-      context.strokeStyle = ghostSelected.color;
-      context.lineWidth = tileSize / 4;
-      context.beginPath();
-      context.moveTo(
-        ghostSelected.x * tileSize + tileSize / 2,
-        ghostSelected.y * tileSize + tileSize / 2
-      );
-      context.lineTo(
-        ghostPath[0][0] * tileSize + tileSize / 2,
-        ghostPath[0][1] * tileSize + tileSize / 2
-      );
-      for (let i = 1; i < ghostPath.length; i++) {
-        // Determine if the ghostPath has wrapped around the map
-        const xDiff = Math.abs(ghostPath[i][0] - ghostPath[i - 1][0]);
-        const yDiff = Math.abs(ghostPath[i][1] - ghostPath[i - 1][1]);
-        if (xDiff > 1 || yDiff > 1) {
-          context.stroke();
-          context.beginPath();
-          context.moveTo(
+      // Draw path
+      if (ghostSelected !== null) {
+        const ghostPath = map.getPath(
+          ghostSelected.prevX,
+          ghostSelected.prevY,
+          Math.floor(mouse.x / tileSize),
+          Math.floor(mouse.y / tileSize)
+        );
+        context.strokeStyle = ghostSelected.color;
+        context.lineWidth = tileSize / 4;
+        context.beginPath();
+        context.moveTo(
+          ghostSelected.x * tileSize + tileSize / 2,
+          ghostSelected.y * tileSize + tileSize / 2
+        );
+        context.lineTo(
+          ghostPath[0][0] * tileSize + tileSize / 2,
+          ghostPath[0][1] * tileSize + tileSize / 2
+        );
+        for (let i = 1; i < ghostPath.length; i++) {
+          // Determine if the ghostPath has wrapped around the map
+          const xDiff = Math.abs(ghostPath[i][0] - ghostPath[i - 1][0]);
+          const yDiff = Math.abs(ghostPath[i][1] - ghostPath[i - 1][1]);
+          if (xDiff > 1 || yDiff > 1) {
+            context.stroke();
+            context.beginPath();
+            context.moveTo(
+              ghostPath[i][0] * tileSize + tileSize / 2,
+              ghostPath[i][1] * tileSize + tileSize / 2
+            );
+          }
+          context.lineTo(
             ghostPath[i][0] * tileSize + tileSize / 2,
             ghostPath[i][1] * tileSize + tileSize / 2
           );
         }
-        context.lineTo(
-          ghostPath[i][0] * tileSize + tileSize / 2,
-          ghostPath[i][1] * tileSize + tileSize / 2
-        );
+        context.stroke();
       }
-      context.stroke();
+
+      // Draw lives
+      context.drawImage(
+        images.rightman,
+        (2 * images.rightman.width) / 4,
+        0,
+        images.rightman.width / 4,
+        images.rightman.height,
+        tileSize * 2,
+        (mapHeight + 0.25) * tileSize,
+        ((tileSize * 1.5) / 12) * 9,
+        tileSize * 1.5
+      );
+      context.fillStyle = "#FFFF00";
+      context.font = "bold " + tileSize + "px monospace";
+      context.fillText(
+        "x " + numLives,
+        tileSize * 3.5,
+        mapHeight * tileSize + tileSize * 1.5
+      );
+
+      // Draw score
+      context.fillText(
+        "Score: " + String(score).padStart(6, "0"),
+        tileSize * map.width - tileSize * 10,
+        mapHeight * tileSize + tileSize * 1.5
+      );
     }
 
-    // Draw lives
-    context.drawImage(
-      images.rightman,
-      (2 * images.rightman.width) / 4,
-      0,
-      images.rightman.width / 4,
-      images.rightman.height,
-      tileSize * 2,
-      (mapHeight + 0.25) * tileSize,
-      ((tileSize * 1.5) / 12) * 9,
-      tileSize * 1.5
-    );
-    context.fillStyle = "#FFFF00";
-    context.font = "bold " + tileSize + "px monospace";
-    context.fillText(
-      "x " + numLives,
-      tileSize * 3.5,
-      mapHeight * tileSize + tileSize * 1.5
-    );
-
-    // Draw score
-    context.fillText(
-      "Score: " + String(score).padStart(6, "0"),
-      tileSize * map.width - tileSize * 10,
-      mapHeight * tileSize + tileSize * 1.5
-    );
-
-    requestAnimationFrame(gameLoop);
+    if (gameMode !== "gameover") {
+      requestAnimationFrame(gameLoop);
+    }
   }
   requestAnimationFrame(gameLoop);
 }
+
+function howToPlay() {
+  // Create title screen overtop of canvas
+  const howToScreen = document.createElement("div");
+  howToScreen.style.position = "absolute";
+  howToScreen.style.top = "0";
+  howToScreen.style.left = "0";
+  howToScreen.style.width = "100%";
+  howToScreen.style.height = "100%";
+  howToScreen.style.backgroundColor = "black";
+  howToScreen.style.zIndex = "1";
+  howToScreen.style.display = "flex";
+  howToScreen.style.flexDirection = "column";
+  howToScreen.style.justifyContent = "center";
+  howToScreen.style.alignItems = "center";
+  howToScreen.style.color = "white";
+  howToScreen.style.fontFamily = "Silkscreen, cursive";
+  howToScreen.style.fontSize = "2em";
+  howToScreen.style.textAlign = "center";
+  document.body.appendChild(howToScreen);
+}
+
+function titleScreen() {
+  // Create title screen overtop of canvas
+  const titleScreen = document.createElement("div");
+  titleScreen.style.position = "absolute";
+  titleScreen.style.top = "0";
+  titleScreen.style.left = "0";
+  titleScreen.style.width = "100%";
+  titleScreen.style.height = "100%";
+  titleScreen.style.backgroundColor = "black";
+  titleScreen.style.zIndex = "1";
+  titleScreen.style.display = "flex";
+  titleScreen.style.flexDirection = "column";
+  titleScreen.style.justifyContent = "center";
+  titleScreen.style.alignItems = "center";
+  titleScreen.style.color = "white";
+  titleScreen.style.fontFamily = "Silkscreen, cursive";
+  titleScreen.style.fontSize = "2em";
+  titleScreen.style.textAlign = "center";
+  document.body.appendChild(titleScreen);
+
+  // Add title image
+  const titleImage = document.createElement("img");
+  titleImage.src = "assets/textures/logo.png";
+  titleImage.style.width = "100%";
+  titleImage.style.maxWidth = "600px";
+  titleScreen.appendChild(titleImage);
+
+  // Add start button
+  const startButton = document.createElement("div");
+  startButton.textContent = "Start";
+  startButton.style.backgroundColor = "#EE8321";
+  startButton.style.borderRadius = "10px";
+  startButton.style.padding = "10px";
+  startButton.style.marginTop = "20px";
+  startButton.style.cursor = "pointer";
+  startButton.style.color = "#FBCF07";
+  startButton.style.textShadow =
+    "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000";
+  startButton.onmouseover = () => {
+    startButton.style.backgroundColor = "#DD7311";
+  };
+  startButton.onmouseout = () => {
+    startButton.style.backgroundColor = "#EE8321";
+  };
+  startButton.onclick = () => {
+    titleScreen.remove();
+    play();
+  };
+  titleScreen.appendChild(startButton);
+
+  // Add how-to-play button
+  const howToPlayButton = document.createElement("div");
+  howToPlayButton.textContent = "How to Play";
+  howToPlayButton.style.backgroundColor = "#EE8321";
+  howToPlayButton.style.borderRadius = "10px";
+  howToPlayButton.style.padding = "6px";
+  howToPlayButton.style.marginTop = "10px";
+  howToPlayButton.style.cursor = "pointer";
+  howToPlayButton.style.color = "#FBCF07";
+  howToPlayButton.style.textShadow =
+    "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000";
+  howToPlayButton.style.fontSize = "0.8em";
+  howToPlayButton.onmouseover = () => {
+    howToPlayButton.style.backgroundColor = "#DD7311";
+  };
+  howToPlayButton.onmouseout = () => {
+    howToPlayButton.style.backgroundColor = "#EE8321";
+  };
+  howToPlayButton.onclick = () => {
+    titleScreen.remove();
+    howToPlay();
+  };
+  titleScreen.appendChild(howToPlayButton);
+}
+
+titleScreen();
