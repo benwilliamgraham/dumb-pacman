@@ -425,11 +425,54 @@ function howToPlay() {
   howToScreen.style.flexDirection = "column";
   howToScreen.style.justifyContent = "center";
   howToScreen.style.alignItems = "center";
-  howToScreen.style.color = "white";
+  howToScreen.style.color = "yellow";
+  howToScreen.style.textShadow =
+    "-2px -2px 0 #00F, 2px -2px 0 #00F, -2px 2px 0 #00F, 2px 2px 0 #00F";
   howToScreen.style.fontFamily = "Silkscreen, cursive";
-  howToScreen.style.fontSize = "2em";
+  howToScreen.style.fontSize = "1.5em";
   howToScreen.style.textAlign = "center";
   document.body.appendChild(howToScreen);
+
+  for (let text of [
+    "After hitting his head, Pacman is confused and thinks that he needs to go and touch the ghosts to win.",
+    "In this game you get to control the ghosts, and you need to lead pacman around the different maps having him eat the pellets.",
+    "You control the ghosts by dragging out a route for them to follow.",
+  ]) {
+    const p = document.createElement("p");
+    p.innerText = text;
+    howToScreen.appendChild(p);
+  }
+
+  // Add instructional gif
+  const gif = document.createElement("img");
+  gif.src = "assets/textures/howto.gif";
+  gif.style.width = "50%";
+  gif.style.height = "auto";
+  gif.style.marginTop = "20px";
+  howToScreen.appendChild(gif);
+
+  // Add start button
+  const startButton = document.createElement("div");
+  startButton.textContent = "Start";
+  startButton.style.backgroundColor = "#EE8321";
+  startButton.style.borderRadius = "10px";
+  startButton.style.padding = "10px";
+  startButton.style.marginTop = "20px";
+  startButton.style.cursor = "pointer";
+  startButton.style.color = "#FBCF07";
+  startButton.style.textShadow =
+    "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000";
+  startButton.onmouseover = () => {
+    startButton.style.backgroundColor = "#DD7311";
+  };
+  startButton.onmouseout = () => {
+    startButton.style.backgroundColor = "#EE8321";
+  };
+  startButton.onclick = () => {
+    howToScreen.remove();
+    play();
+  };
+  howToScreen.appendChild(startButton);
 }
 
 function titleScreen() {
