@@ -122,13 +122,6 @@ function play() {
     }
   });
 
-  // Sample background image
-  const backgroundCanvas = document.createElement("canvas");
-  backgroundCanvas.width = background.width;
-  backgroundCanvas.height = background.height;
-  const backgroundContext = backgroundCanvas.getContext("2d");
-  backgroundContext.drawImage(background, 0, 0);
-
   // Create map
   let numPellets = 0;
   let numLives = 3;
@@ -137,6 +130,13 @@ function play() {
   const map = new Map(mapWidth, mapHeight);
 
   function initMap() {
+    // Sample background image
+    const backgroundCanvas = document.createElement("canvas");
+    backgroundCanvas.width = background.width;
+    backgroundCanvas.height = background.height;
+    const backgroundContext = backgroundCanvas.getContext("2d");
+    backgroundContext.drawImage(background, 0, 0);
+
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
         // Sample background image
