@@ -39,11 +39,14 @@ const context = canvas.getContext("2d");
 context.imageSmoothingEnabled = false;
 
 const images = {
-  pacman: new Image(),
   pink: new Image(),
   red: new Image(),
   orange: new Image(),
   blue: new Image(),
+  leftman: new Image(),
+  rightman: new Image(),
+  leftmandeath: new Image(),
+  rightmandeath: new Image(),
 };
 const background = new Image();
 background.src = "assets/textures/level 1.png";
@@ -153,7 +156,7 @@ function play() {
   }
 
   // Add pacman
-  const pacman = new Pacman(7, 7, images.pacman);
+  const pacman = new Pacman(7, 7, images.leftman);
 
   let lastTime = 0;
   function gameLoop(time) {
@@ -228,16 +231,9 @@ function play() {
 
     // Draw pacman reversed if moving left
     if (pacman.direction === "left") {
-      context.save();
-      context.translate(
-        pacman.x * tileSize + tileSize / 2,
-        pacman.y * tileSize + tileSize / 2
-      );
-      context.scale(-1, 1);
-      context.translate(
-        -(pacman.x * tileSize + tileSize / 2),
-        -(pacman.y * tileSize + tileSize / 2)
-      );
+      pacman.spritesheet = images.leftman;
+    } else {
+      pacman.spritesheet = images.rightman;
     }
 
     context.drawImage(
@@ -251,10 +247,6 @@ function play() {
       tileSize,
       tileSize + tileSize / 6
     );
-
-    if (pacman.direction === "left") {
-      context.restore();
-    }
 
     // Draw path
     if (ghostSelected !== null) {
@@ -297,11 +289,11 @@ function play() {
 
     // Draw lives
     context.drawImage(
-      images.pacman,
-      (2 * images.pacman.width) / pacman.numFrames,
+      images.rightman,
+      (2 * images.rightman.width) / pacman.numFrames,
       0,
-      images.pacman.width / pacman.numFrames,
-      images.pacman.height,
+      images.rightman.width / pacman.numFrames,
+      images.rightman.height,
       tileSize * 2,
       (mapHeight + 0.25) * tileSize,
       ((tileSize * 1.5) / 12) * 9,
